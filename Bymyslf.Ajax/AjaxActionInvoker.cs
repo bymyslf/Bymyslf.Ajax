@@ -1,16 +1,24 @@
-﻿﻿using System;
-using System.Linq;
-using System.Web.Mvc;
-using System.Web.Mvc.Async;
-using System.Web.Script.Serialization;
-
-namespace Bymyslf.Ajax
+﻿namespace Bymyslf.Ajax
 {
-    public class AjaxActionInvoker : ControllerActionInvoker
+    using System;
+    using System.Linq;
+    using System.Web.Mvc;
+    using System.Web.Mvc.Async;
+    using System.Web.Script.Serialization;
+
+    public class AjaxActionInvoker : AsyncControllerActionInvoker
     {
+        private static readonly ControllerDescriptorCache descriptorCache;
+        internal const string AjaxProxyAction = "Internal::Proxy";
+
+        static AjaxActionInvoker()
+        {
+            descriptorCache = new ControllerDescriptorCache();
+        }
+
         public override bool InvokeAction(ControllerContext controllerContext, string actionName)
         {
-            if (actionName == "Internal::Proxy")
+            if (actionName == AjaxProxyAction)
             {
                 return RenderJavaScriptProxyScript(controllerContext);
             }
@@ -18,14 +26,21 @@ namespace Bymyslf.Ajax
             return base.InvokeAction(controllerContext, actionName);
         }
 
+        protected override ControllerDescriptor GetControllerDescriptor(ControllerContext controllerContext)
+        {
+            Type controllerType = controllerContext.Controller.GetType();
+            return descriptorCache.GetDescriptor(controllerType, () => new AjaxReflectedControllerDescriptor(controllerType));
+        }
+
         private bool RenderJavaScriptProxyScript(ControllerContext controllerContext)
         {
-            var controllerDescriptor = GetControllerDescriptor(controllerContext);
+            var controllerDescriptor = this.GetControllerDescriptor(controllerContext);
             var actions = from action in controllerDescriptor.GetCanonicalActions()
                           select new
                           {
                               Name = action.ActionName,
-                              Method = GetActionHttpMethod(action)
+                              Method = action.GetActionHttpMethod(),
+                              DataType = action.GetAjaxDataType()
                           };
 
             var serializer = new JavaScriptSerializer();
@@ -33,19 +48,15 @@ namespace Bymyslf.Ajax
 
             string proxyScript = @";(function (mvc, undefined) {{
                     mvc.{0} = [];
-
                     var actions = {1};
                     for (var i = 0, len = actions.length; i < len; i++) {{
                         var action = actions[i];
-
                         (function (action, mvc) {{
                             mvc.{0}[action.Name] = function(obj, includeAntiForgeryToken) {{
                                 var headers = {{'x-mvc-action': action}};
-
                                 if (includeAntiForgeryToken) {{
                                     headers['__RequestVerificationToken'] = $('input[name=""__RequestVerificationToken""]').val();
                                 }}
-
                                 return $.ajax({{
                                     cache: false,
                                     dataType: 'json',
@@ -72,19 +83,16 @@ namespace Bymyslf.Ajax
             return true;
         }
 
-        private string GetActionHttpMethod(ActionDescriptor action)
+        private class ControllerDescriptorCache : ReaderWriterCache<Type, ControllerDescriptor>
         {
-            var reflectedActionDescriptor = action as ReflectedActionDescriptor;
-            if (reflectedActionDescriptor != null)
+            public ControllerDescriptorCache()
             {
-                if (reflectedActionDescriptor.IsDefined(typeof(ActionMethodSelectorAttribute), true))
-                {
-                    var httpMethod = (ActionMethodSelectorAttribute)reflectedActionDescriptor.MethodInfo.GetCustomAttributes(typeof(ActionMethodSelectorAttribute), inherit: true).FirstOrDefault();
-                    return httpMethod.GetType().Name.Replace("Http", "").Replace("Attribute", "").ToUpper();
-                }
             }
 
-            return "GET";
+            public ControllerDescriptor GetDescriptor(Type controllerType, Func<ControllerDescriptor> creator)
+            {
+                return FetchOrCreateItem(controllerType, creator);
+            }
         }
     }
 }

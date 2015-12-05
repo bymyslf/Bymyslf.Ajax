@@ -1,13 +1,13 @@
-﻿﻿using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Web.Mvc;
-using System.Web.Mvc.Async;
-
-namespace Bymyslf.Ajax
+﻿namespace Bymyslf.Ajax
 {
-    public class AjaxController : Controller
+    using System;
+    using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using System.Web.Mvc;
+    using System.Web.Mvc.Async;
+
+    public abstract class AjaxController : Controller
     {
         protected override IActionInvoker CreateActionInvoker()
         {
@@ -16,13 +16,13 @@ namespace Bymyslf.Ajax
 
         protected override IAsyncResult BeginExecuteCore(AsyncCallback callback, object state)
         {
-            if (!RouteData.Values.ContainsKey("action"))
+            if (RouteData.Values.ContainsKey("action"))
             {
-                ActionInvoker.InvokeAction(ControllerContext, "Internal::Proxy");
-                return new CompletedAsyncResult() { AsyncState = state };
+                return base.BeginExecuteCore(callback, state);
             }
 
-            return base.BeginExecuteCore(callback, state);
+            ActionInvoker.InvokeAction(ControllerContext, AjaxActionInvoker.AjaxProxyAction);
+            return new CompletedAsyncResult() { AsyncState = state };
         }
 
         protected override void EndExecuteCore(IAsyncResult asyncResult)

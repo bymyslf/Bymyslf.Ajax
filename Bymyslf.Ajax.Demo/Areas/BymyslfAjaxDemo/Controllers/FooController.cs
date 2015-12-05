@@ -1,9 +1,10 @@
-﻿using Bymyslf.Ajax.Demo.Areas.BymyslfAjaxDemo.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using Bymyslf.Ajax.Demo.Areas.BymyslfAjaxDemo.Models;
 
 namespace Bymyslf.Ajax.Demo.Areas.BymyslfAjaxDemo.Controllers
 {
@@ -20,6 +21,11 @@ namespace Bymyslf.Ajax.Demo.Areas.BymyslfAjaxDemo.Controllers
                 },
                 JsonRequestBehavior = JsonRequestBehavior.AllowGet
             };
+        }
+
+        public Task<ActionResult> ListAsync()
+        {
+            return Task.FromResult(List());
         }
 
         [HttpPost]

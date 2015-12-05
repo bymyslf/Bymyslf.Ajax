@@ -53,6 +53,10 @@
                 console.log(data);
             });
 
+            mvc.Foo.ListAsync().done(function (data) {
+                console.log(data);
+            });
+
             mvc.Foo.Save({ id: 4, title: 'Teste' }).done(function (data) {
                 console.log(data);
             });

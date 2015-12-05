@@ -1,11 +1,11 @@
-﻿﻿using System;
-using System.Collections.Specialized;
-using System.Web;
-using System.Web.Helpers;
-using System.Web.Mvc;
-
-namespace Bymyslf.Ajax
+﻿namespace Bymyslf.Ajax
 {
+    using System;
+    using System.Collections.Specialized;
+    using System.Web;
+    using System.Web.Helpers;
+    using System.Web.Mvc;
+
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     public class ValidateAjaxAntiForgeryTokenAttribute : FilterAttribute, IAuthorizationFilter
     {

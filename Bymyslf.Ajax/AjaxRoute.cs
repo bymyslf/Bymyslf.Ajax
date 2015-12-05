@@ -1,9 +1,9 @@
-﻿﻿using System;
-using System.Web.Mvc;
-using System.Web.Routing;
-
-namespace Bymyslf.Ajax
+﻿namespace Bymyslf.Ajax
 {
+    using System;
+    using System.Web.Mvc;
+    using System.Web.Routing;
+
     public class AjaxRoute : Route
     {
         public AjaxRoute(string url)
