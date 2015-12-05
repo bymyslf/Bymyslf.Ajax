@@ -1,7 +1,6 @@
 ﻿namespace Bymyslf.Ajax
 {
     using System;
-    using System.Collections.Specialized;
     using System.Web;
     using System.Web.Helpers;
     using System.Web.Mvc;
